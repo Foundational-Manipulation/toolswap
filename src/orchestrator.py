@@ -64,6 +64,11 @@ class Orchestrator:
             #TODO: check result
             print(self.toolswap_client.get_result())
 
+            # rice needs specific init joint pos
+            goal = SwapToolGoal("sausage")
+            self.reset_joints_client.send_goal(goal)
+            self.reset_joints_client.wait_for_result()
+
             # Publish new policy (starts automatically)
             policy_msg.thumb_stick_vertical = 0.0
             policy_msg.button_upper = True
@@ -82,6 +87,11 @@ class Orchestrator:
             #TODO: check result
             print(self.toolswap_client.get_result())
 
+            # rice needs specific init joint pos
+            goal = SwapToolGoal("beer")
+            self.reset_joints_client.send_goal(goal)
+            self.reset_joints_client.wait_for_result()
+
             # Publish new policy (starts automatically)
             policy_msg.thumb_stick_vertical = 0.0
             policy_msg.press_middle = 1.0
@@ -99,6 +109,11 @@ class Orchestrator:
             self.toolswap_client.wait_for_result()
             #TODO: check result
             print(self.toolswap_client.get_result())
+
+            # rice needs specific init joint pos
+            goal = SwapToolGoal("lid")
+            self.reset_joints_client.send_goal(goal)
+            self.reset_joints_client.wait_for_result()
 
             # Publish new policy (starts automatically)
             policy_msg.thumb_stick_vertical = 0.0
