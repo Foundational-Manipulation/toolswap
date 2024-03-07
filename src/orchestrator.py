@@ -12,7 +12,7 @@ class Orchestrator:
         self.toolswap_client.wait_for_server()
 
         # publisher for policy
-        self.policy_publisher = rospy.Publisher("/q2r_right_hand_inputs", OVR2ROSInputs, queue_size=5)
+        self.policy_publisher = rospy.Publisher("/orchestrator", OVR2ROSInputs, queue_size=5)
         # listener for VLM Action
         vlm_sub = rospy.Subscriber("/vlm/action", String, self.vlm_callback, queue_size=1)
 
