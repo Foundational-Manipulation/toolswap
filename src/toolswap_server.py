@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import rospy
 import actionlib
 import roslib
@@ -11,7 +12,6 @@ from geometry_msgs.msg import PoseStamped, Twist
 from controller_manager_msgs.srv import *
 
 class ToolswapServer:
-    # TODO: Measure tool setpoints
     tool_dict = {
         "beer_opener": {
             "setpoints": list((
@@ -77,6 +77,17 @@ class ToolswapServer:
                             )),
             "is_in_rack": True
         },
+        "none": {
+            "setpoints": list((np.array([0.9964996077818302, 0.022431589003332808, 0.08041207873604908, 0.0, 
+                               0.017456925702225012, -0.9979112237219678, 0.062041858579186204, 0.0, 
+                               0.08163738513881041, -0.06042210336888351, -0.9948288831614095, 0.0, 
+                               0.5415816895385864, -0.014602715530858734, 0.43957066082080576, 1.0]).reshape(4,4).transpose(),
+                            np.array([0.9964996077818302, 0.022431589003332808, 0.08041207873604908, 0.0, 
+                               0.017456925702225012, -0.9979112237219678, 0.062041858579186204, 0.0, 
+                               0.08163738513881041, -0.06042210336888351, -0.9948288831614095, 0.0, 
+                               0.5415816895385864, -0.014602715530858734, 0.43957066082080576, 1.0]).reshape(4,4).transpose())),
+            "is_in_rack": False
+        }
     }
     current_tool = "none"
 
@@ -99,6 +110,11 @@ class ToolswapServer:
             print("Loaded", "kth_cartesian_pose_effort_interface_controller")
         else:
             print("Error when loading", "kth_cartesian_pose_effort_interface_controller")
+        resp = load_controller_srv.call(LoadControllerRequest("kth_joint_pose_effort_interface_controller"))
+        if resp.ok:
+            print("Loaded", "kth_joint_pose_effort_interface_controller")
+        else:
+            print("Error when loading", "kth_joint_pose_effort_interface_controller")
 
         # Controller switching service
         rospy.wait_for_service('/controller_manager/switch_controller')
@@ -184,29 +200,28 @@ class ToolswapServer:
         if self.current_tool is goal:
             self._server.set_succeeded()
             return
-        if self.current_tool is None:
+        if self.current_tool is "none":
             gripper_goal = FGMoveGoal()
             gripper_goal.width = 0.07
             gripper_goal.velocity = 0.1
             self._gripper_ros_pub.publish(gripper_goal)
 
-        self._swap_controller('kth_cartesian_pose_effort_interface_controller', 'kth_joint_pose_effort_interface_controller') 
+        self._swap_controller('kth_cartesian_pose_effort_interface_controller', 'kth_cartesian_velocity_effort_interface_controller') 
 
         # Start at safe position
         self._goto_setpoint(self.start_setpoint)
 
         # Unload current tool if there is one
-        if self.current_tool is not None:
+        if self.current_tool is not "none":
             succes = self._visit_tool(self.current_tool, mode="unload")
             #self._goto_setpoint(self.start_setpoint)
             if not succes:
                 return
 
         # Load new tool
-        if goal is not "none":
-            succes = self._visit_tool(goal, mode="load")
-            if not succes:
-                return
+        succes = self._visit_tool(goal, mode="load")
+        if not succes:
+            return
 
         # Return to safe position
         self._goto_setpoint(self.start_setpoint)
@@ -227,6 +242,7 @@ class ToolswapServer:
         # TODO: Error checking to see if we have arrived at joint configuration. For now just a hack to wait
         rospy.sleep(5)
 
+        self._swap_controller('kth_cartesian_velocity_effort_interface_controller', 'kth_joint_pose_effort_interface_controller')
         self.current_tool = goal
         self._server.set_succeeded()
 

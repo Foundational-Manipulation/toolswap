@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="load_gripper" default="false" />
+  <include file="$(find franka_control)/launch/franka_control.launch" >
+    <arg name="robot_ip" value="172.16.0.12" />
+    <arg name="load_gripper" value="$(arg load_gripper)" />
+  </include>
+
+  <arg name="stop_at_shutdown" default="true" />
+  <arg name="arm_id"      default="panda" />
+  <arg name="joint_names" default="[$(arg arm_id)_finger_joint1, $(arg arm_id)_finger_joint2]" />
+  <node name="fg_franka_gripper" pkg="franka_gripper" type="fg_franka_gripper_node" output="screen">
+    <param name="robot_ip" value="172.16.0.12"/>
+    <param name="stop_at_shutdown" value="$(arg stop_at_shutdown)" />
+    <rosparam param="joint_names" subst_value="true">$(arg joint_names)</rosparam>
+  </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="worldtopanda0" args="0 0 0 0 0 0 world panda_link0 100" />
+
+  <rosparam command="load" file="$(find franka_example_controllers)/config/franka_example_controllers.yaml" />
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="kth_cartesian_velocity_effort_interface_controller"/>
+
+  <node name="toolswap_server" pkg="toolswap" type="toolswap_server.py" />
+  <node name="orchestrator" pkg="toolswap" type="orchestrator.py" />
+
+</launch>
+    
