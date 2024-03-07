@@ -22,6 +22,7 @@
     <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="kth_cartesian_velocity_effort_interface_controller"/>
 
   <node name="toolswap_server" pkg="toolswap" type="toolswap_server.py" />
+  <node name="joint_reset_server" pkg="toolswap" type="joint_reset_server.py" />
   <node name="orchestrator" pkg="toolswap" type="orchestrator.py" />
 
 </launch>

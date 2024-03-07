@@ -10,6 +10,8 @@ class Orchestrator:
         # publisher/listener for toolswap action server
         self.toolswap_client = actionlib.SimpleActionClient("swap_tool",SwapToolAction)
         self.toolswap_client.wait_for_server()
+        self.reset_joints_client = actionlib.SimpleActionClient("reset_joints",SwapToolAction)
+        self.reset_joints_client.wait_for_server()
 
         # publisher for policy
         self.policy_publisher = rospy.Publisher("/orchestrator", OVR2ROSInputs, queue_size=5)
@@ -38,6 +40,11 @@ class Orchestrator:
             self.toolswap_client.wait_for_result()
             #TODO: check result
             print(self.toolswap_client.get_result())
+
+            # rice needs specific init joint pos
+            goal = SwapToolGoal("rice")
+            self.reset_joints_client.send_goal(goal)
+            self.reset_joints_client.wait_for_result()
 
             # Publish new policy (starts automatically)
             policy_msg.thumb_stick_vertical = 0.0
